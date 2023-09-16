@@ -1,3 +1,4 @@
+const { parse } = require("dotenv");
 const Favourite = require("../models/favourite");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
@@ -44,7 +45,7 @@ module.exports.createUser = async (req, res) => {
 module.exports.findUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate("favourite");
     if (!user || user.password !== password) {
       console.log("user not found || invalid credentials");
       console.log("user :", user);
@@ -56,7 +57,13 @@ module.exports.findUser = async (req, res) => {
 
     // console.log(user);
     const token = jwt.sign(
-      JSON.stringify({ name: user.name, email: user.email, id: user._id }),
+      JSON.stringify({
+        name: user.name,
+        email: user.email,
+        id: user._id,
+        Favourite: user.favourite,
+        interest: user.interest,
+      }),
       process.env.SECRET_KEY,
       {
         algorithm: process.env.ENCRYPT_ALGORITHM,
@@ -121,10 +128,14 @@ module.exports.updateUserInterest = async (req, res) => {
 module.exports.addFavNews = async (req, res) => {
   try {
     const { news } = req.body;
-    const user = await User.findOne(req.user);
-    await Favourite.create({ data: news, user: user.id });
-    const newsNews = await Favourite.findOne(news);
-    user.favourite.unshift(newsNews.id);
+    const user = await User.findById(req.user);
+    // console.log(user);
+    const data =await JSON.parse(news)
+    console.log( data);
+
+    await Favourite.create({ data, user: user.id });
+    const getNews = await Favourite.findOne({ data });
+    user.favourite.unshift(getNews.id);
 
     await user.save();
     return res.status(200).json({
@@ -142,11 +153,10 @@ module.exports.removeFavNews = async (req, res) => {
   try {
     const { newsId } = req.query;
 
-    if(!newsId){
+    if (!newsId) {
       return res.status(400).json({
-        message:"Please provide id for news",
-        
-      })
+        message: "Please provide id for news",
+      });
     }
     const user = await User.findOne(req.user);
     const news = await Favourite.findById(newsId);
