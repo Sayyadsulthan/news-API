@@ -15,8 +15,15 @@ const userChema = new mongoose.Schema({
     required: true,
   },
   interest: {
-    type: [{}],
+    type: mongoose.Schema.Types.String,
+    enum: ["technology", "sports", "politics", "health"],
   },
+  favourite: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Favourite",
+    },
+  ],
 });
 
 const User = mongoose.model("User", userChema);

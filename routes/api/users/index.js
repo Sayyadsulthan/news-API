@@ -11,43 +11,26 @@ const passport = require("passport");
 app.post("/signUp", usersController.createUser);
 app.post("/login", usersController.findUser);
 
-app.get("/", passport.authenticate("jwt", { session: false }), (req, res) => {
-  /*
-    find the user
-    */
+app.patch(
+  "/update-interest",
+  passport.authenticate("jwt", { session: false }),
+  usersController.updateUserInterest
+);
+app.post(
+  "/add-fav-news",
+  passport.authenticate("jwt", { session: false }),
+  usersController.addFavNews
+);
+app.delete(
+  "/remove-fav-news",
+  passport.authenticate("jwt", { session: false }),
+  usersController.removeFavNews
+);
 
-  // query like id& q & interest
-  console.log(req.query);
-
-  return res.status(200).json({
-    message: "api/user/",
-  });
-});
-app.get("/category", (req, res) => {
-  // query like id& q & interest
-  console.log(req.query);
-  /* find the news based on category
-
-// To query sources
-// All options are optional
-newsapi.v2.sources({
-  category: 'technology',
-  language: 'en',
-  country: 'us'
-}).then(response => {
-  console.log(response);
-//   
-    {
-      status: "ok",
-      sources: [...]
-    }
-//   
-});
-
-*/
-  return res.status(200).json({
-    message: "api/user/category",
-  });
-});
+app.use(
+  "/news",
+  passport.authenticate("jwt", { session: false }),
+  require("./news")
+);
 
 module.exports = app;

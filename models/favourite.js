@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 
 const userChema = new mongoose.Schema({
-  content: {
+  data: {
     type: {},
+    required: true,
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
