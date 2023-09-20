@@ -13,8 +13,8 @@ const opt = {
 
 passport.use(
   new JwtStrategy(opt, (jwtPayload, done) => {
-    // console.log("strategy :", jwtPayload.user);
-    User.findOne(parse(jwtPayload.user))
+    // console.log("strategy :", jwtPayload);
+    User.findById(jwtPayload.id)
       .then((user) => {
         // console.log("user :", user);
         if (user) {

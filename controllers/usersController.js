@@ -1,4 +1,3 @@
-const { parse } = require("dotenv");
 const Favourite = require("../models/favourite");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
@@ -7,14 +6,16 @@ require("dotenv").config();
 module.exports.createUser = async (req, res) => {
   try {
     const { email, name, password, confirm_password } = req.body;
-
     if (!email || !name || !password || !confirm_password) {
+      console.log("Please fill the required fields ");
+
       return res.status(400).json({
         message: "Please fill the required fields",
         success: false,
       });
     }
     if (password !== confirm_password) {
+      console.log("Password and confirm_password not matches ");
       return res.status(401).json({
         message: "Password and confirm_password not matches",
         success: false,
@@ -22,6 +23,7 @@ module.exports.createUser = async (req, res) => {
     }
     const user = await User.findOne({ email });
     if (user) {
+      console.log("User already exist");
       return res.status(409).json({
         message: "User already exist",
         success: false,
@@ -45,6 +47,7 @@ module.exports.createUser = async (req, res) => {
 module.exports.findUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     const user = await User.findOne({ email }).populate("favourite");
     if (!user || user.password !== password) {
       console.log("user not found || invalid credentials");
@@ -61,7 +64,7 @@ module.exports.findUser = async (req, res) => {
         name: user.name,
         email: user.email,
         id: user._id,
-        Favourite: user.favourite,
+        favourite: user.favourite,
         interest: user.interest,
       }),
       process.env.SECRET_KEY,
@@ -87,6 +90,8 @@ module.exports.findUser = async (req, res) => {
 module.exports.updateUserInterest = async (req, res) => {
   try {
     let interest = req.body.interest;
+
+    console.log("user Interest :", interest);
     switch (req.body.interest) {
       case "health":
         interest = "health";
@@ -106,16 +111,10 @@ module.exports.updateUserInterest = async (req, res) => {
     await User.findByIdAndUpdate(req.user.id, {
       interest: interest,
     });
-    const user = await User.findById(user.id);
-
-    // console.log("user Updated : ", user);
 
     return res.status(200).json({
-      message: "user found please keep token secret",
+      message: "User Interest Updated successfull..",
       success: true,
-      data: {
-        user,
-      },
     });
   } catch (err) {
     console.log("err :", err);
@@ -128,24 +127,62 @@ module.exports.updateUserInterest = async (req, res) => {
 module.exports.addFavNews = async (req, res) => {
   try {
     const { news } = req.body;
+    // const data = await JSON.parse(news);
+    if (!news.source.id) {
+      news.source.id = null;
+    }
+    console.log("add fav controller", news.source);
+    const response = await Favourite.findOne({ data: news });
+    if (response) {
+      return res.status(409).json({
+        message: "News Already Exist in Favourite",
+        success: false,
+      });
+    }
     const user = await User.findById(req.user);
     // console.log(user);
-    const data =await JSON.parse(news)
-    console.log( data);
 
-    await Favourite.create({ data, user: user.id });
-    const getNews = await Favourite.findOne({ data });
+    await Favourite.create({ data: news, user: user.id });
+    const getNews = await Favourite.findOne({ data: news });
     user.favourite.unshift(getNews.id);
 
     await user.save();
+    console.log("added to favourite");
     return res.status(200).json({
       message: "news added to favourite",
+      data: getNews,
+      success: true,
     });
   } catch (err) {
     console.log("err :", err);
     return res
       .status(500)
       .json({ message: "Internal server Error", success: false });
+  }
+};
+
+module.exports.getFavNews = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    console.log("user in fav : ", user);
+    if (user) {
+      const fav = await Favourite.find({ user: user._id });
+      console.log(" fav : ", fav);
+      return res.status(200).json({
+        message: "all favourite news of user",
+        success: true,
+        data: fav,
+      });
+    } else {
+      return res
+        .status(404)
+        .json({ message: "user not found", success: false });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+      success: false,
+    });
   }
 };
 

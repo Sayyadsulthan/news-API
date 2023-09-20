@@ -11,6 +11,11 @@ const passport = require("passport");
 app.post("/signUp", usersController.createUser);
 app.post("/login", usersController.findUser);
 
+app.get(
+  "/get-fav-news",
+  passport.authenticate("jwt", { session: false }),
+  usersController.getFavNews
+);
 app.patch(
   "/update-interest",
   passport.authenticate("jwt", { session: false }),
