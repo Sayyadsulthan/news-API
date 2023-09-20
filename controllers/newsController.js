@@ -1,15 +1,11 @@
-/* fetch method
-https://newsapi.org/v2/everything?q=viratkohli&sortBy=publishedAt&apiKey=6dd692b41c024abbbefa59cce64d640d
-
-
-*/
+require("dotenv").config();
 
 const User = require("../models/user");
 
 module.exports.getNews = async (req, res) => {
   try {
     const response = await fetch(
-      `https://newsapi.org/v2/everything?q=${req.query.q}&sortBy=publishedAt&apiKey=6dd692b41c024abbbefa59cce64d640d`
+      `https://newsapi.org/v2/everything?q=${req.query.q}&sortBy=publishedAt&apiKey=${process.env.NEWS_API_KEY}`
     );
 
     const data = await response.json();
@@ -37,7 +33,7 @@ module.exports.getUserInterestNews = async (req, res) => {
       fetch(
         `https://newsapi.org/v2/top-headlines?country=us&category=${
           user.interest || "technology"
-        }&apiKey=6dd692b41c024abbbefa59cce64d640d`
+        }&apiKey=${process.env.NEWS_API_KEY}`
       )
         .then((res) => res.json())
         .then((response) => {
