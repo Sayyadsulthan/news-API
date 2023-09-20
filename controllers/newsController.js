@@ -4,10 +4,6 @@ https://newsapi.org/v2/everything?q=viratkohli&sortBy=publishedAt&apiKey=6dd692b
 
 */
 
-// NEWS API
-const NewsAPI = require("newsapi");
-const newsapi = new NewsAPI("6dd692b41c024abbbefa59cce64d640d");
-
 const User = require("../models/user");
 
 module.exports.getNews = async (req, res) => {
@@ -17,14 +13,7 @@ module.exports.getNews = async (req, res) => {
     );
 
     const data = await response.json();
-    // const data = await newsapi.v2.sources({
-    //   q: req.query.q,
-    //   language: "en",
-    //   category: req.query.q,
-    //   // psge: 2,
-    //   // country: "us",
-    // });
-    console.log(data);
+
     return res.status(200).json({
       message: "fetching news from api",
       success: true,
@@ -42,24 +31,17 @@ module.exports.getNews = async (req, res) => {
 
 module.exports.getUserInterestNews = async (req, res) => {
   try {
-    console.log("inside newsController req :", req.user);
     const user = await User.findById(req.user._id);
-    console.log(user.interest);
+
     if (user) {
-      // newsapi.v2
-      //   .sources({
-      //     category: user.interest,
-      //     language: "en",
-      //     country: "us",
-      //   })
       fetch(
-        `https://newsapi.org/v2/top-headlines?country=us&category=${user.interest}&apiKey=6dd692b41c024abbbefa59cce64d640d`
+        `https://newsapi.org/v2/top-headlines?country=us&category=${
+          user.interest || "technology"
+        }&apiKey=6dd692b41c024abbbefa59cce64d640d`
       )
         .then((res) => res.json())
         .then((response) => {
-          console.log(response);
           return res.status(200).json({
-            // message:""
             success: true,
             data: response,
           });
