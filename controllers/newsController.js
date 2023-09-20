@@ -1,6 +1,7 @@
-require("dotenv").config();
+const fetch = require("node-fetch");
 
 const User = require("../models/user");
+require("dotenv").config();
 
 module.exports.getNews = async (req, res) => {
   try {
