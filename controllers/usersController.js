@@ -3,28 +3,35 @@ const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+// FOR CREATING THE USER / Account
 module.exports.createUser = async (req, res) => {
   try {
+    // DESTRUCTURE FROM req BODY
     const { email, name, password, confirm_password } = req.body;
+    // if any of them not found
     if (!email || !name || !password || !confirm_password) {
       return res.status(400).json({
         message: "Please fill the required fields",
         success: false,
       });
     }
+    // If Password not Match with Confirm_password
     if (password !== confirm_password) {
       return res.status(401).json({
         message: "Password and confirm_password not matches",
         success: false,
       });
     }
+    // Finfing the User base on email
     const user = await User.findOne({ email });
+    // if user Exist?
     if (user) {
       return res.status(409).json({
         message: "User already exist",
         success: false,
       });
     }
+    // if user not exist
     await User.create({ email, name, password });
 
     return res.status(201).json({
@@ -40,11 +47,14 @@ module.exports.createUser = async (req, res) => {
   }
 };
 
+// Used to login / Send token
 module.exports.findUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Finding the user from email and populate the favourite
     const user = await User.findOne({ email }).populate("favourite");
+    // If user exist and password not Matches ?
     if (!user || user.password !== password) {
       return res.status(401).json({
         message: "Invalid credentials",
@@ -52,6 +62,7 @@ module.exports.findUser = async (req, res) => {
       });
     }
 
+    // if user found? Create a Token
     const token = jwt.sign(
       JSON.stringify({
         name: user.name,
@@ -65,6 +76,7 @@ module.exports.findUser = async (req, res) => {
         algorithm: process.env.ENCRYPT_ALGORITHM,
       }
     );
+    // Sending the success response
     return res.status(200).json({
       message: "user found please keep token secret",
       success: true,
@@ -80,8 +92,10 @@ module.exports.findUser = async (req, res) => {
   }
 };
 
+// Update the user Interest to db
 module.exports.updateUserInterest = async (req, res) => {
   try {
+    // storing the user interest in variable
     let interest = req.body.interest;
 
     switch (req.body.interest) {
@@ -99,6 +113,7 @@ module.exports.updateUserInterest = async (req, res) => {
         break;
     }
 
+    // Updating the user's Interest field
     await User.findByIdAndUpdate(req.user.id, {
       interest: interest,
     });
@@ -115,6 +130,7 @@ module.exports.updateUserInterest = async (req, res) => {
   }
 };
 
+// ADDING THE NEWS TO FAVOURITE AND UPDATE THE USER'S FAVOURITE ARRAY
 module.exports.addFavNews = async (req, res) => {
   try {
     const { news } = req.body;
@@ -151,11 +167,14 @@ module.exports.addFavNews = async (req, res) => {
   }
 };
 
+// finding the list of favourite news from favourite model
 module.exports.getFavNews = async (req, res) => {
   try {
+    // finding the user based on id
     const user = await User.findById(req.user._id);
-
+    // if user exist
     if (user) {
+      // find favoutite  and send to response
       const fav = await Favourite.find({ user: user._id });
 
       return res.status(200).json({
@@ -176,6 +195,7 @@ module.exports.getFavNews = async (req, res) => {
   }
 };
 
+// REMOVING THE FAVOURITE NEWS FROM FAVOURITE MODEL AND FROM USER'S FAVOURITE ARRAY
 module.exports.removeFavNews = async (req, res) => {
   try {
     const { newsId } = req.query;

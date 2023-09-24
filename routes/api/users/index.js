@@ -11,6 +11,7 @@ const passport = require("passport");
 app.post("/signUp", usersController.createUser);
 app.post("/login", usersController.findUser);
 
+// AUTHINTICATION using jwt
 app.get(
   "/get-fav-news",
   passport.authenticate("jwt", { session: false }),
